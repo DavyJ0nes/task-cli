@@ -1,4 +1,5 @@
 # Task CLI
+[![Go Report Card](https://goreportcard.com/badge/github.com/DavyJ0nes/task-cli)](https://goreportcard.com/report/github.com/DavyJ0nes/task-cli)
 
 ## Description
 
@@ -14,7 +15,7 @@ Thanks to [Jon Calhoun](https://twitter.com/joncalhoun) for creating this great 
 
 Basic Usage instructions.
 
-```shell
+```
 Task is a CLI todo tool
 
 Usage:
@@ -45,4 +46,4 @@ Use "task [command] --help" for more information about a command.
 
 ## License
 
-MIT
+[MIT](./LICENSE)
