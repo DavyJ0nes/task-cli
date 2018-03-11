@@ -1,4 +1,5 @@
 # Task CLI
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/DavyJ0nes/task-cli)](https://goreportcard.com/report/github.com/DavyJ0nes/task-cli)
 
 ## Description
@@ -15,7 +16,7 @@ Thanks to [Jon Calhoun](https://twitter.com/joncalhoun) for creating this great 
 
 Basic Usage instructions.
 
-```
+```none
 Task is a CLI todo tool
 
 Usage:
@@ -38,11 +39,13 @@ Use "task [command] --help" for more information about a command.
 - [x] Add Add Command
 - [x] Add List Command
 - [x] Add Do Command
-- [ ] Add database (boltdb)
-- [ ] Complete tutorial code
-- [ ] Allow easy swapping of database backends for tool with interfaces
+- [x] Add database (boltdb)
+- [x] Complete tutorial code
 - [ ] Update Makefile to create releases for relevant OSes.
 - [ ] Ensure tool can be run from within Docker
+- [ ] Add metadata to Tasks
+- [ ] Add completed flag to List command
+- [ ] Fork logic to create API backend for web service
 
 ## License
 
