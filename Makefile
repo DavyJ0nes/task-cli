@@ -1,6 +1,6 @@
 all: run
 
-# Example Makefile for building and deploying Go applications with Docker
+# Makefile for building and deploying the task-cli application
 
 # To build and run the docker container locally, run:
 # $ make
@@ -9,43 +9,55 @@ all: run
 # $ make publish version=1.0.0
 
 #### VARIABLES ####
-username = davyj0nes
-app_name = task
+USERNAME = davyj0nes
+APP_NAME = task
+PROJECT ?= github.com/davyj0nes/task-cli
 
-binary_version = 0.0.1
-image_version ?= latest
+IMAGE_VERSION ?= latest
 
-go_version ?= 1.10
+GO_VERSION ?= 1.10
 
-git_hash = $(shell git rev-parse HEAD | cut -c 1-6)
-build_date = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
+RELEASE = 0.0.2
+COMMIT = $(shell git rev-parse HEAD | cut -c 1-6)
+BUILD_TIME = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
-.PHONY: run binary image run_image test clean
+BUILD_PREFIX = CGO_ENABLED=0 GOOS=linux
+BUILD_FLAGS = -a -tags netgo --installsuffix netgo
+LDFLAGS = -ldflags "-s -w -X ${PROJECT}/cmd.Release=${RELEASE} -X ${PROJECT}/cmd.Commit=${COMMIT} -X ${PROJECT}/cmd.BuildTime=${BUILD_TIME}"
+GO_BUILD_STATIC = $(BUILD_PREFIX) go build $(BUILD_FLAGS) $(LDFLAGS)
+GO_BUILD_OSX = GOOS=darwin GOARCh=amd64 go build $(LDFLAGS)
+
+DOCKER_CMD = docker run -it --rm -v ${APP_NAME}:/app/.tasks --name ${APP_NAME} ${USERNAME}/${APP_NAME}:${IMAGE_VERSION} "\$$@"
+
+.PHONY: compile build install test clean
 
 #### COMMANDS ####
-run:
-	$(call blue, "# Running App...")
-	@docker run -it --rm -v "$(GOPATH)":/go -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${go_version} go run main.go
+compile:
+	$(call blue, "# Compiling Static Golang App...")
+	@docker run --rm -v "$(GOPATH)":/go -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go get && ${GO_BUILD_STATIC} -o ${APP_NAME}_static'
+	$(call blue, "# Compiling OSX Golang App...")
+	@docker run --rm -v "$(GOPATH)":/go -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go get && ${GO_BUILD_OSX} -o ${APP_NAME}'
 
-binary:
-	$(call blue, "# Building Golang Binary...")
-	@docker run --rm -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${go_version} sh -c 'go get && CGO_ENABLED=0 GOOS=linux go build -a -tags netgo --installsuffix netgo -o ${app_name}'
-
-image: binary
+build: compile
 	$(call blue, "# Building Docker Image...")
-	@docker build --label APP_VERSION=${binary_version} --label BUILT_ON=${build_date} --label GIT_HASH=${git_hash} -t ${username}/${app_name}:${image_version} .
+	@docker build --no-cache --label APP_VERSION=${RELEASE} --label BUILT_ON=${BUILD_TIME} --label GIT_HASH=${COMMIT} -t ${USERNAME}/${APP_NAME}:${IMAGE_VERSION} .
+	@docker volume create ${APP_NAME}
 	@$(MAKE) clean
 
-run_image: image
-	$(call blue, "# Running Docker Image Locally...")
-	@docker run -it --rm --name ${app_name} ${username}/${app_name}:${image_version} 
+install: build
+	$(call blue, "# Installing Docker Image Locally...")
+	@rm -f $(HOME)/bin/taskd
+	@echo "#!/bin/bash" >> $(HOME)/bin/taskd
+	@echo "set -e" >> $(HOME)/bin/taskd
+	@echo ${DOCKER_CMD} >> $(HOME)/bin/taskd
+	@chmod +x $(HOME)/bin/taskd
 
 test:
 	$(call blue, "# Testing Golang Code...")
-	@docker run --rm -it -v "$(GOPATH):/go" -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${go_version} sh -c 'go test -v' 
+	@docker run --rm -it -v "$(GOPATH):/go" -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go test -v' 
 
 clean: 
-	@rm -f ${app_name} 
+	@rm -f ${APP_NAME} 
 
 #### FUNCTIONS ####
 define blue

@@ -41,8 +41,7 @@ Use "task [command] --help" for more information about a command.
 - [x] Add Do Command
 - [x] Add database (boltdb)
 - [x] Complete tutorial code
-- [ ] Update Makefile to create releases for relevant OSes.
-- [ ] Ensure tool can be run from within Docker
+- [x] Ensure tool can be run from within Docker
 - [ ] Add metadata to Tasks
 - [ ] Add completed flag to List command
 - [ ] Fork logic to create API backend for web service

@@ -1,3 +1,5 @@
 task.db
 task-cli
+task
+task_static
 *.log
