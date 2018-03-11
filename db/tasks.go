@@ -52,7 +52,7 @@ func AllTasks() ([]Task, error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(bucketName)
 		if bucket == nil {
-			return fmt.Errorf("Bucket %q not found", bucketName)
+			return fmt.Errorf("bucket %q not found", bucketName)
 		}
 
 		// print out all open tasks

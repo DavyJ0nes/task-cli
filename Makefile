@@ -58,7 +58,9 @@ install: build
 	@chmod +x $(HOME)/bin/taskd
 
 test:
-	$(call blue, "# Testing Golang Code...")
+	$(call blue, "# Linting Code...")
+	@golint -min_confidence=0.3 ./...
+	$(call blue, "# Running Tests...")
 	@docker run --rm -it -v "$(GOPATH):/go" -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go test -v' 
 
 clean: 
