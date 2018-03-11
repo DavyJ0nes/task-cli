@@ -24,19 +24,24 @@ BUILD_TIME = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 BUILD_PREFIX = CGO_ENABLED=0 GOOS=linux
 BUILD_FLAGS = -a -tags netgo --installsuffix netgo
 LDFLAGS = -ldflags "-s -w -X ${PROJECT}/cmd.Release=${RELEASE} -X ${PROJECT}/cmd.Commit=${COMMIT} -X ${PROJECT}/cmd.BuildTime=${BUILD_TIME}"
+DOCKER_GO_BUILD = docker run --rm -v "$(GOPATH)":/go -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION}
 GO_BUILD_STATIC = $(BUILD_PREFIX) go build $(BUILD_FLAGS) $(LDFLAGS)
 GO_BUILD_OSX = GOOS=darwin GOARCh=amd64 go build $(LDFLAGS)
+GO_BUILD_WIN = GOOS=windows GOARCh=amd64 go build $(LDFLAGS)
 
-DOCKER_CMD = docker run -it --rm -v ${APP_NAME}:/app/.tasks --name ${APP_NAME} ${USERNAME}/${APP_NAME}:${IMAGE_VERSION} "\$$@"
+DOCKER_RUN_CMD = docker run -it --rm -v ${APP_NAME}:/app/.tasks --name ${APP_NAME} ${USERNAME}/${APP_NAME}:${IMAGE_VERSION} "\$$@"
 
 .PHONY: compile build install test clean
 
 #### COMMANDS ####
 compile:
+	@mkdir -p releases/${RELEASE}
 	$(call blue, "# Compiling Static Golang App...")
-	@docker run --rm -v "$(GOPATH)":/go -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go get && ${GO_BUILD_STATIC} -o ${APP_NAME}_static'
+	@${DOCKER_GO_BUILD} sh -c 'go get && ${GO_BUILD_STATIC} -o ${APP_NAME}_static'
 	$(call blue, "# Compiling OSX Golang App...")
-	@docker run --rm -v "$(GOPATH)":/go -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go get && ${GO_BUILD_OSX} -o ${APP_NAME}'
+	@${DOCKER_GO_BUILD} sh -c 'go get && ${GO_BUILD_OSX} -o releases/${RELEASE}/${APP_NAME}_osx'
+	$(call blue, "# Compiling Windows Golang App...")
+	@${DOCKER_GO_BUILD} sh -c 'go get && ${GO_BUILD_WIN} -o releases/${RELEASE}/${APP_NAME}.exe'
 
 build: compile
 	$(call blue, "# Building Docker Image...")
@@ -49,7 +54,7 @@ install: build
 	@rm -f $(HOME)/bin/taskd
 	@echo "#!/bin/bash" >> $(HOME)/bin/taskd
 	@echo "set -e" >> $(HOME)/bin/taskd
-	@echo ${DOCKER_CMD} >> $(HOME)/bin/taskd
+	@echo ${DOCKER_RUN_CMD} >> $(HOME)/bin/taskd
 	@chmod +x $(HOME)/bin/taskd
 
 test:
@@ -57,7 +62,7 @@ test:
 	@docker run --rm -it -v "$(GOPATH):/go" -v "$(CURDIR)":/go/src/app -w /go/src/app golang:${GO_VERSION} sh -c 'go test -v' 
 
 clean: 
-	@rm -f ${APP_NAME} 
+	@rm -f ${APP_NAME}_static
 
 #### FUNCTIONS ####
 define blue
