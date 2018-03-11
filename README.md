@@ -12,6 +12,28 @@ It was created as part of a tutorial on [Gophercises](https://gophercises.com/ex
 
 Thanks to [Jon Calhoun](https://twitter.com/joncalhoun) for creating this great learning resource.
 
+## Installation
+
+### go install
+
+If you have your Go workspace set up correctly then you are able to install task-cli to your `$GOPATH/bin` directory by using `go install`. You may need to run `go get` before this if there are dependency issues, though `go install` should take care of most of this for you.
+
+### Docker
+
+If you would like you can run task-cli within a docker contianer. As part of the Makefile you can run `make install` this will perform the following actions
+
+- Create a statically linked binary
+- Create a docker image with the go binary within
+- Create a docker volume to persist the bolt database file
+- Create a wrapper bash script within `$HOME/bin` called `taskd` that will run the container
+
+You can also forego using the wrapper bash script and run the container yourself with the following commands:
+
+```shell
+docker volume create task
+docker run -it --rm -v task:/app/.tasks davyj0nes/task:latest
+```
+
 ## Usage
 
 Basic Usage instructions.
